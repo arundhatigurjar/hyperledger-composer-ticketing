@@ -1,0 +1,32 @@
+{
+  "name": "ticketing-network",
+  "version": "0.0.1",
+  "description": "A blockchain ticketing network for event management",
+  "scripts": {
+    "prepublish": "mkdirp ./dist && composer archive create --sourceType dir --sourceName . -a ./dist/ticketing-network.bna",
+    "pretest": "npm run lint",
+    "lint": "eslint .",
+    "test": "nyc mocha -t 0 test/*.js && cucumber-js"
+  },
+  "author": "Arundhati Gurujar",
+  "email": "agurujar@dekin.edu.au",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "chai": "latest",
+    "chai-as-promised": "latest",
+    "composer-admin": "^0.19.1",
+    "composer-cli": "^0.19.1",
+    "composer-client": "^0.19.1",
+    "composer-common": "^0.19.1",
+    "composer-connector-embedded": "^0.19.1",
+    "composer-cucumber-steps": "^0.19.1",
+    "cucumber": "^2.2.0",
+    "eslint": "latest",
+    "mkdirp": "latest",
+    "mocha": "latest",
+    "nyc": "latest"
+  },
+  "dependencies": {
+    "composer-runtime": "^0.19.1"
+  }
+}
