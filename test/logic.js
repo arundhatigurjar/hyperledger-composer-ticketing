@@ -27,434 +27,297 @@ chai.should();
 chai.use(require('chai-as-promised'));
 
 const namespace = 'org.deakin.ticketing.app';
-const assetType = 'Ticket';
-const assetNS = namespace + '.' + assetType;
-const participantType = 'User';
-const participantNS = namespace + '.' + participantType;
-
-// describe('#' + namespace, () => {
-//     // In-memory card store for testing so cards are not persisted to the file system
-//     const cardStore = require('composer-common').NetworkCardStoreManager.getCardStore( { type: 'composer-wallet-inmemory' } );
-
-//     // Embedded connection used for local testing
-//     const connectionProfile = {
-//         name: 'embedded',
-//         'x-type': 'embedded'
-//     };
-
-//     // Name of the business network card containing the administrative identity for the business network
-//     const adminCardName = 'admin';
-
-//     // Admin connection to the blockchain, used to deploy the business network
-//     let adminConnection;
-
-//     // This is the business network connection the tests will use.
-//     let businessNetworkConnection;
-
-//     // This is the factory for creating instances of types.
-//     let factory;
-
-//     // These are the identities for Alice and Bob.
-//     const aliceCardName = 'alice';
-//     const bobCardName = 'bob';
-
-//     // These are a list of receieved events.
-//     let events;
-
-//     let businessNetworkName;
-
-//     before(async () => {
-//         // Generate certificates for use with the embedded connection
-//         const credentials = CertificateUtil.generate({ commonName: 'admin' });
-
-//         // Identity used with the admin connection to deploy business networks
-//         const deployerMetadata = {
-//             version: 1,
-//             userName: 'PeerAdmin',
-//             roles: [ 'PeerAdmin', 'ChannelAdmin' ]
-//         };
-//         const deployerCard = new IdCard(deployerMetadata, connectionProfile);
-//         deployerCard.setCredentials(credentials);
-//         const deployerCardName = 'PeerAdmin';
-
-//         adminConnection = new AdminConnection({ cardStore: cardStore });
-
-//         await adminConnection.importCard(deployerCardName, deployerCard);
-//         await adminConnection.connect(deployerCardName);
-//     });
-
-//     /**
-//      *
-//      * @param {String} cardName The card name to use for this identity
-//      * @param {Object} identity The identity details
-//      */
-//     async function importCardForIdentity(cardName, identity) {
-//         const metadata = {
-//             userName: identity.userID,
-//             version: 1,
-//             enrollmentSecret: identity.userSecret,
-//             businessNetwork: businessNetworkName
-//         };
-//         const card = new IdCard(metadata, connectionProfile);
-//         await adminConnection.importCard(cardName, card);
-//     }
-
-//     // This is called before each test is executed.
-//     beforeEach(async () => {
-//         // Generate a business network definition from the project directory.
-//         let businessNetworkDefinition = await BusinessNetworkDefinition.fromDirectory(path.resolve(__dirname, '..'));
-//         businessNetworkName = businessNetworkDefinition.getName();
-//         await adminConnection.install(businessNetworkDefinition);
-//         const startOptions = {
-//             networkAdmins: [
-//                 {
-//                     userName: 'admin',
-//                     enrollmentSecret: 'adminpw'
-//                 }
-//             ]
-//         };
-//         const adminCards = await adminConnection.start(businessNetworkName, businessNetworkDefinition.getVersion(), startOptions);
-//         await adminConnection.importCard(adminCardName, adminCards.get('admin'));
-
-//         // Create and establish a business network connection
-//         businessNetworkConnection = new BusinessNetworkConnection({ cardStore: cardStore });
-//         events = [];
-//         businessNetworkConnection.on('event', event => {
-//             events.push(event);
-//         });
-//         await businessNetworkConnection.connect(adminCardName);
-
-//         // Get the factory for the business network.
-//         factory = businessNetworkConnection.getBusinessNetwork().getFactory();
-
-//         const participantRegistry = await businessNetworkConnection.getParticipantRegistry(participantNS);
-//         // Create the participants.
-//         const alice = factory.newResource(namespace, participantType, 'alice@email.com');
-//         alice.firstName = 'Alice';
-//         alice.lastName = 'A';
-
-//         const bob = factory.newResource(namespace, participantType, 'bob@email.com');
-//         bob.firstName = 'Bob';
-//         bob.lastName = 'B';
-
-//         participantRegistry.addAll([alice, bob]);
-
-//         const assetRegistry = await businessNetworkConnection.getAssetRegistry(assetNS);
-//         // Create the assets.
-//         const asset1 = factory.newResource(namespace, assetType, '1');
-//         asset1.owner = factory.newRelationship(namespace, participantType, 'alice@email.com');
-//         asset1.value = '10';
-
-//         const asset2 = factory.newResource(namespace, assetType, '2');
-//         asset2.owner = factory.newRelationship(namespace, participantType, 'bob@email.com');
-//         asset2.value = '20';
-
-//         assetRegistry.addAll([asset1, asset2]);
-
-//         // Issue the identities.
-//         let identity = await businessNetworkConnection.issueIdentity(participantNS + '#alice@email.com', 'alice1');
-//         await importCardForIdentity(aliceCardName, identity);
-//         identity = await businessNetworkConnection.issueIdentity(participantNS + '#bob@email.com', 'bob1');
-//         await importCardForIdentity(bobCardName, identity);
-//     });
-
-//     /**
-//      * Reconnect using a different identity.
-//      * @param {String} cardName The name of the card for the identity to use
-//      */
-//     async function useIdentity(cardName) {
-//         await businessNetworkConnection.disconnect();
-//         businessNetworkConnection = new BusinessNetworkConnection({ cardStore: cardStore });
-//         events = [];
-//         businessNetworkConnection.on('event', (event) => {
-//             events.push(event);
-//         });
-//         await businessNetworkConnection.connect(cardName);
-//         factory = businessNetworkConnection.getBusinessNetwork().getFactory();
-//     }
-
-//     it('Alice can read all of the assets', async () => {
-//         // Use the identity for Alice.
-//         await useIdentity(aliceCardName);
-//         const assetRegistry = await businessNetworkConnection.getAssetRegistry(assetNS);
-//         const assets = await assetRegistry.getAll();
-
-//         // Validate the assets.
-//         assets.should.have.lengthOf(2);
-//         const asset1 = assets[0];
-//         asset1.owner.getFullyQualifiedIdentifier().should.equal(participantNS + '#alice@email.com');
-//         asset1.value.should.equal('10');
-//         const asset2 = assets[1];
-//         asset2.owner.getFullyQualifiedIdentifier().should.equal(participantNS + '#bob@email.com');
-//         asset2.value.should.equal('20');
-//     });
-
-//     it('Bob can read all of the assets', async () => {
-//         // Use the identity for Bob.
-//         await useIdentity(bobCardName);
-//         const assetRegistry = await businessNetworkConnection.getAssetRegistry(assetNS);
-//         const assets = await assetRegistry.getAll();
-
-//         // Validate the assets.
-//         assets.should.have.lengthOf(2);
-//         const asset1 = assets[0];
-//         asset1.owner.getFullyQualifiedIdentifier().should.equal(participantNS + '#alice@email.com');
-//         asset1.value.should.equal('10');
-//         const asset2 = assets[1];
-//         asset2.owner.getFullyQualifiedIdentifier().should.equal(participantNS + '#bob@email.com');
-//         asset2.value.should.equal('20');
-//     });
-
-//     it('Alice can add assets that she owns', async () => {
-//         // Use the identity for Alice.
-//         await useIdentity(aliceCardName);
-
-//         // Create the asset.
-//         let asset3 = factory.newResource(namespace, assetType, '3');
-//         asset3.owner = factory.newRelationship(namespace, participantType, 'alice@email.com');
-//         asset3.value = '30';
-
-//         // Add the asset, then get the asset.
-//         const assetRegistry = await businessNetworkConnection.getAssetRegistry(assetNS);
-//         await assetRegistry.add(asset3);
-
-//         // Validate the asset.
-//         asset3 = await assetRegistry.get('3');
-//         asset3.owner.getFullyQualifiedIdentifier().should.equal(participantNS + '#alice@email.com');
-//         asset3.value.should.equal('30');
-//     });
-
-//     it('Alice cannot add assets that Bob owns', async () => {
-//         // Use the identity for Alice.
-//         await useIdentity(aliceCardName);
-
-//         // Create the asset.
-//         const asset3 = factory.newResource(namespace, assetType, '3');
-//         asset3.owner = factory.newRelationship(namespace, participantType, 'bob@email.com');
-//         asset3.value = '30';
-
-//         // Try to add the asset, should fail.
-//         const assetRegistry = await  businessNetworkConnection.getAssetRegistry(assetNS);
-//         assetRegistry.add(asset3).should.be.rejectedWith(/does not have .* access to resource/);
-//     });
-
-//     it('Bob can add assets that he owns', async () => {
-//         // Use the identity for Bob.
-//         await useIdentity(bobCardName);
-
-//         // Create the asset.
-//         let asset4 = factory.newResource(namespace, assetType, '4');
-//         asset4.owner = factory.newRelationship(namespace, participantType, 'bob@email.com');
-//         asset4.value = '40';
-
-//         // Add the asset, then get the asset.
-//         const assetRegistry = await businessNetworkConnection.getAssetRegistry(assetNS);
-//         await assetRegistry.add(asset4);
-
-//         // Validate the asset.
-//         asset4 = await assetRegistry.get('4');
-//         asset4.owner.getFullyQualifiedIdentifier().should.equal(participantNS + '#bob@email.com');
-//         asset4.value.should.equal('40');
-//     });
-
-//     it('Bob cannot add assets that Alice owns', async () => {
-//         // Use the identity for Bob.
-//         await useIdentity(bobCardName);
-
-//         // Create the asset.
-//         const asset4 = factory.newResource(namespace, assetType, '4');
-//         asset4.owner = factory.newRelationship(namespace, participantType, 'alice@email.com');
-//         asset4.value = '40';
-
-//         // Try to add the asset, should fail.
-//         const assetRegistry = await businessNetworkConnection.getAssetRegistry(assetNS);
-//         assetRegistry.add(asset4).should.be.rejectedWith(/does not have .* access to resource/);
-
-//     });
-
-//     it('Alice can update her assets', async () => {
-//         // Use the identity for Alice.
-//         await useIdentity(aliceCardName);
-
-//         // Create the asset.
-//         let asset1 = factory.newResource(namespace, assetType, '1');
-//         asset1.owner = factory.newRelationship(namespace, participantType, 'alice@email.com');
-//         asset1.value = '50';
-
-//         // Update the asset, then get the asset.
-//         const assetRegistry = await businessNetworkConnection.getAssetRegistry(assetNS);
-//         await assetRegistry.update(asset1);
-
-//         // Validate the asset.
-//         asset1 = await assetRegistry.get('1');
-//         asset1.owner.getFullyQualifiedIdentifier().should.equal(participantNS + '#alice@email.com');
-//         asset1.value.should.equal('50');
-//     });
-
-//     it('Alice cannot update Bob\'s assets', async () => {
-//         // Use the identity for Alice.
-//         await useIdentity(aliceCardName);
-
-//         // Create the asset.
-//         const asset2 = factory.newResource(namespace, assetType, '2');
-//         asset2.owner = factory.newRelationship(namespace, participantType, 'bob@email.com');
-//         asset2.value = '50';
-
-//         // Try to update the asset, should fail.
-//         const assetRegistry = await businessNetworkConnection.getAssetRegistry(assetNS);
-//         assetRegistry.update(asset2).should.be.rejectedWith(/does not have .* access to resource/);
-//     });
-
-//     it('Bob can update his assets', async () => {
-//         // Use the identity for Bob.
-//         await useIdentity(bobCardName);
-
-//         // Create the asset.
-//         let asset2 = factory.newResource(namespace, assetType, '2');
-//         asset2.owner = factory.newRelationship(namespace, participantType, 'bob@email.com');
-//         asset2.value = '60';
-
-//         // Update the asset, then get the asset.
-//         const assetRegistry = await businessNetworkConnection.getAssetRegistry(assetNS);
-//         await assetRegistry.update(asset2);
-
-//         // Validate the asset.
-//         asset2 = await assetRegistry.get('2');
-//         asset2.owner.getFullyQualifiedIdentifier().should.equal(participantNS + '#bob@email.com');
-//         asset2.value.should.equal('60');
-//     });
-
-//     it('Bob cannot update Alice\'s assets', async () => {
-//         // Use the identity for Bob.
-//         await useIdentity(bobCardName);
-
-//         // Create the asset.
-//         const asset1 = factory.newResource(namespace, assetType, '1');
-//         asset1.owner = factory.newRelationship(namespace, participantType, 'alice@email.com');
-//         asset1.value = '60';
-
-//         // Update the asset, then get the asset.
-//         const assetRegistry = await businessNetworkConnection.getAssetRegistry(assetNS);
-//         assetRegistry.update(asset1).should.be.rejectedWith(/does not have .* access to resource/);
-
-//     });
-
-//     it('Alice can remove her assets', async () => {
-//         // Use the identity for Alice.
-//         await useIdentity(aliceCardName);
-
-//         // Remove the asset, then test the asset exists.
-//         const assetRegistry = await businessNetworkConnection.getAssetRegistry(assetNS);
-//         await assetRegistry.remove('1');
-//         const exists = await assetRegistry.exists('1');
-//         exists.should.be.false;
-//     });
-
-//     it('Alice cannot remove Bob\'s assets', async () => {
-//         // Use the identity for Alice.
-//         await useIdentity(aliceCardName);
-
-//         // Remove the asset, then test the asset exists.
-//         const assetRegistry = await businessNetworkConnection.getAssetRegistry(assetNS);
-//         assetRegistry.remove('2').should.be.rejectedWith(/does not have .* access to resource/);
-//     });
-
-//     it('Bob can remove his assets', async () => {
-//         // Use the identity for Bob.
-//         await useIdentity(bobCardName);
-
-//         // Remove the asset, then test the asset exists.
-//         const assetRegistry = await businessNetworkConnection.getAssetRegistry(assetNS);
-//         await assetRegistry.remove('2');
-//         const exists = await assetRegistry.exists('2');
-//         exists.should.be.false;
-//     });
-
-//     it('Bob cannot remove Alice\'s assets', async () => {
-//         // Use the identity for Bob.
-//         await useIdentity(bobCardName);
-
-//         // Remove the asset, then test the asset exists.
-//         const assetRegistry = await businessNetworkConnection.getAssetRegistry(assetNS);
-//         assetRegistry.remove('1').should.be.rejectedWith(/does not have .* access to resource/);
-//     });
-
-//     it('Alice can submit a transaction for her assets', async () => {
-//         // Use the identity for Alice.
-//         await useIdentity(aliceCardName);
-
-//         // Submit the transaction.
-//         const transaction = factory.newTransaction(namespace, 'SampleTransaction');
-//         transaction.asset = factory.newRelationship(namespace, assetType, '1');
-//         transaction.newValue = '50';
-//         await businessNetworkConnection.submitTransaction(transaction);
-
-//         // Get the asset.
-//         const assetRegistry = await businessNetworkConnection.getAssetRegistry(assetNS);
-//         const asset1 = await assetRegistry.get('1');
-
-//         // Validate the asset.
-//         asset1.owner.getFullyQualifiedIdentifier().should.equal(participantNS + '#alice@email.com');
-//         asset1.value.should.equal('50');
-
-//         // Validate the events.
-//         events.should.have.lengthOf(1);
-//         const event = events[0];
-//         event.eventId.should.be.a('string');
-//         event.timestamp.should.be.an.instanceOf(Date);
-//         event.asset.getFullyQualifiedIdentifier().should.equal(assetNS + '#1');
-//         event.oldValue.should.equal('10');
-//         event.newValue.should.equal('50');
-//     });
-
-//     it('Alice cannot submit a transaction for Bob\'s assets', async () => {
-//         // Use the identity for Alice.
-//         await useIdentity(aliceCardName);
-
-//         // Submit the transaction.
-//         const transaction = factory.newTransaction(namespace, 'SampleTransaction');
-//         transaction.asset = factory.newRelationship(namespace, assetType, '2');
-//         transaction.newValue = '50';
-//         businessNetworkConnection.submitTransaction(transaction).should.be.rejectedWith(/does not have .* access to resource/);
-//     });
-
-//     it('Bob can submit a transaction for his assets', async () => {
-//         // Use the identity for Bob.
-//         await useIdentity(bobCardName);
-
-//         // Submit the transaction.
-//         const transaction = factory.newTransaction(namespace, 'SampleTransaction');
-//         transaction.asset = factory.newRelationship(namespace, assetType, '2');
-//         transaction.newValue = '60';
-//         await businessNetworkConnection.submitTransaction(transaction);
-
-//         // Get the asset.
-//         const assetRegistry = await businessNetworkConnection.getAssetRegistry(assetNS);
-//         const asset2 = await assetRegistry.get('2');
-
-//         // Validate the asset.
-//         asset2.owner.getFullyQualifiedIdentifier().should.equal(participantNS + '#bob@email.com');
-//         asset2.value.should.equal('60');
-
-//         // Validate the events.
-//         events.should.have.lengthOf(1);
-//         const event = events[0];
-//         event.eventId.should.be.a('string');
-//         event.timestamp.should.be.an.instanceOf(Date);
-//         event.asset.getFullyQualifiedIdentifier().should.equal(assetNS + '#2');
-//         event.oldValue.should.equal('20');
-//         event.newValue.should.equal('60');
-//     });
-
-//     it('Bob cannot submit a transaction for Alice\'s assets', async () => {
-//         // Use the identity for Bob.
-//         await useIdentity(bobCardName);
-
-//         // Submit the transaction.
-//         const transaction = factory.newTransaction(namespace, 'SampleTransaction');
-//         transaction.asset = factory.newRelationship(namespace, assetType, '1');
-//         transaction.newValue = '60';
-//         businessNetworkConnection.submitTransaction(transaction).should.be.rejectedWith(/does not have .* access to resource/);
-//     });
-
-// });
+
+const eventAssetType = 'EEvent';
+const eventNS = namespace + '.' + eventAssetType;
+
+const ticketAssetType = 'Ticket';
+const ticketNS = namespace + '.' + ticketAssetType;
+
+const participantEM = 'EventManager';
+const eventManagerNS = namespace + '.' + participantEM;
+
+const participantAttendee = 'Attendee';
+const attendeeNS = namespace + '.' + participantAttendee;
+
+describe('#' + namespace, () => {
+    // In-memory card store for testing so cards are not persisted to the file system
+    const cardStore = require('composer-common').NetworkCardStoreManager.getCardStore({ type: 'composer-wallet-inmemory' });
+
+    // Embedded connection used for local testing
+    const connectionProfile = {
+        name: 'embedded',
+        'x-type': 'embedded'
+    };
+
+    // Name of the business network card containing the administrative identity for the business network
+    const adminCardName = 'networkadmin.card';
+
+    // Admin connection to the blockchain, used to deploy the business network
+    let adminConnection;
+
+    // This is the business network connection the tests will use.
+    let businessNetworkConnection;
+
+    // This is the factory for creating instances of types.
+    let factory;
+
+    // These are the identities for Alice and Bob.
+    const creatorCardName = 'manager';
+
+    // These are a list of receieved events.
+    let events;
+
+    let businessNetworkName;
+
+    before(async () => {
+        // Generate certificates for use with the embedded connection
+        const credentials = CertificateUtil.generate({ commonName: 'admin' });
+
+        // Identity used with the admin connection to deploy business networks
+        const deployerMetadata = {
+            version: 1,
+            userName: 'PeerAdmin',
+            roles: ['PeerAdmin', 'ChannelAdmin']
+        };
+        const deployerCard = new IdCard(deployerMetadata, connectionProfile);
+        deployerCard.setCredentials(credentials);
+        const deployerCardName = 'PeerAdmin';
+
+        adminConnection = new AdminConnection({ cardStore: cardStore });
+
+        await adminConnection.importCard(deployerCardName, deployerCard);
+        await adminConnection.connect(deployerCardName);
+    });
+
+    /**
+     *
+     * @param {String} cardName The card name to use for this identity
+     * @param {Object} identity The identity details
+     */
+    async function importCardForIdentity(cardName, identity) {
+        const metadata = {
+            userName: identity.userID,
+            version: 1,
+            enrollmentSecret: identity.userSecret,
+            businessNetwork: businessNetworkName
+        };
+        const card = new IdCard(metadata, connectionProfile);
+        await adminConnection.importCard(cardName, card);
+    }
+
+    // This is called before each test is executed.
+    beforeEach(async () => {
+        // Generate a business network definition from the project directory.
+        let businessNetworkDefinition = await BusinessNetworkDefinition.fromDirectory(path.resolve(__dirname, '..'));
+        businessNetworkName = businessNetworkDefinition.getName();
+        await adminConnection.install(businessNetworkDefinition);
+        const startOptions = {
+            networkAdmins: [
+                {
+                    userName: 'admin',
+                    enrollmentSecret: 'adminpw'
+                }
+            ]
+        };
+        const adminCards = await adminConnection.start(businessNetworkName, businessNetworkDefinition.getVersion(), startOptions);
+        await adminConnection.importCard(adminCardName, adminCards.get('admin'));
+
+        // Create and establish a business network connection
+        businessNetworkConnection = new BusinessNetworkConnection({ cardStore: cardStore });
+        events = [];
+        businessNetworkConnection.on('event', event => {
+            events.push(event);
+        });
+        await businessNetworkConnection.connect(adminCardName);
+
+        // Get the factory for the business network.
+        factory = businessNetworkConnection.getBusinessNetwork().getFactory();
+
+        // Create the participants.
+        const eventManagerRegistry = await businessNetworkConnection.getParticipantRegistry(eventManagerNS);
+        const eventManager = factory.newResource(namespace, participantEM, 'aru@email.com');
+        eventManager.name = 'Event Manager';
+        eventManager.id = 'aru@email.com';
+
+        eventManagerRegistry.addAll([eventManager]);
+
+        const attendeeRegistry = await businessNetworkConnection.getParticipantRegistry(attendeeNS);
+        const attendee1 = factory.newResource(namespace, participantAttendee, 'user@email.com');
+        attendee1.name = 'User';
+        attendee1.id = 'user@email.com';
+
+        const attendee2 = factory.newResource(namespace, participantAttendee, 'user2@email.com');
+        attendee2.name = 'User2';
+        attendee2.id = 'user2@email.com';
+
+        attendeeRegistry.addAll([attendee1, attendee2]);
+
+        const eventRegistry = await businessNetworkConnection.getAssetRegistry(eventNS);
+        // Create the assets.
+        const assetEvent = factory.newResource(namespace, eventAssetType, 'EVENT_1');
+        //assetEvent.owner = factory.newRelationship(namespace, participantEM, 'alice@email.com');
+        assetEvent.numberOfTickets = 5;
+        assetEvent.venue = 'Melbourne';
+        assetEvent.time = new Date();
+        assetEvent.eventManager = factory.newRelationship(namespace, 'EventManager', 'aru@email.com');;
+        assetEvent.tickets = [];
+
+        eventRegistry.addAll([assetEvent]);
+
+        const ticketRegistry = await businessNetworkConnection.getAssetRegistry(ticketNS);
+        const ticket1 = factory.newResource('org.deakin.ticketing.app', 'Ticket', '10');
+        ticket1.token = 'user@email.com:10';
+        ticket1.price = 10;
+        ticket1.event = factory.newRelationship(namespace, 'EEvent', 'EVENT_1');
+        ticket1.state = 'NEW';
+        ticket1.owner = factory.newRelationship(namespace, 'Attendee', 'user@email.com');
+
+        const ticket2 = factory.newResource('org.deakin.ticketing.app', 'Ticket', '11');
+        ticket2.token = 'user@email.com:11';
+        ticket2.price = 10;
+        ticket2.event = factory.newRelationship(namespace, 'EEvent', 'EVENT_1');
+        ticket2.state = 'NOT_AVAILABLE';
+        ticket2.owner = factory.newRelationship(namespace, 'Attendee', 'user@email.com');
+
+        const ticket3 = factory.newResource('org.deakin.ticketing.app', 'Ticket', '12');
+        ticket3.token = 'user@email.com:12';
+        ticket3.price = 10;
+        ticket3.event = factory.newRelationship(namespace, 'EEvent', 'EVENT_1');
+        ticket3.state = 'UP_FOR_SALE';
+        ticket3.owner = factory.newRelationship(namespace, 'Attendee', 'user@email.com');
+
+        ticketRegistry.addAll([ticket1, ticket2, ticket3]);
+
+        // Issue the identities.
+        let identity = await businessNetworkConnection.issueIdentity(eventManagerNS + '#aru@email.com', 'aru');
+        await importCardForIdentity(creatorCardName, identity);
+
+    });
+
+    /**
+     * Reconnect using a different identity.
+     * @param {String} cardName The name of the card for the identity to use
+     */
+    async function useIdentity(cardName) {
+        await businessNetworkConnection.disconnect();
+        businessNetworkConnection = new BusinessNetworkConnection({ cardStore: cardStore });
+        events = [];
+        businessNetworkConnection.on('event', (event) => {
+            events.push(event);
+        });
+        await businessNetworkConnection.connect(cardName);
+        factory = businessNetworkConnection.getBusinessNetwork().getFactory();
+    }
+
+    it('Create tickets for an event', async () => {
+        // Use the identity for manager.
+        await useIdentity(creatorCardName);
+
+        //Get the event reference
+        const eventRegistry = await businessNetworkConnection.getAssetRegistry(eventNS);
+        // const event = await eventRegistry.get('EVENT_1');
+
+        // submit the transaction
+        const createTickets = factory.newTransaction(namespace, 'CreateTickets');
+        createTickets.event = factory.newRelationship(namespace, 'EEvent', 'EVENT_1');
+        createTickets.price = 10;
+        await businessNetworkConnection.submitTransaction(createTickets);
+
+        //Check if the correct number of tickets are generated
+        const ticketRegistry = await businessNetworkConnection.getAssetRegistry(ticketNS);
+        const tickets = await ticketRegistry.getAll();
+
+        // Validate the assets.
+        const event = await eventRegistry.get(createTickets.event.$identifier);
+        tickets.should.have.lengthOf(event.numberOfTickets + 3);
+
+        for (var i = 0; i < event.numberOfTickets; i++) {
+            var ticket = tickets[i];
+            //ticket.owner.getFullyQualifiedIdentifier().should.equal(eventManagerNS + '#aru@email.com');
+            ticket.event.getFullyQualifiedIdentifier().should.equal(eventNS + '#EVENT_1');
+            ticket.price.should.equal(createTickets.price);
+            ticket.state.should.equal('NEW');
+        }
+    });
+
+    it('Sell a ticket', async () => {
+
+        const ticketRegistry = await businessNetworkConnection.getAssetRegistry(ticketNS);
+        // Validate the ticket state.
+        let ticket = await ticketRegistry.get('10');
+
+        // submit the transaction
+        const sellTicket = factory.newTransaction(namespace, 'SellTicket');
+        sellTicket.ticket = ticket;
+        await businessNetworkConnection.submitTransaction(sellTicket);
+        ticket = await ticketRegistry.get('10');
+        ticket.state.should.equal('UP_FOR_SALE');
+    });
+
+    it('User buys a ticket successfully', async () => {
+
+        const ticketRegistry = await businessNetworkConnection.getAssetRegistry(ticketNS);
+        // Validate the ticket state.
+        let ticket = await ticketRegistry.get('12');
+
+        // submit the transaction
+        const buyTicket = factory.newTransaction(namespace, 'BuyTicket');
+        buyTicket.ticket = ticket;
+        buyTicket.buyer = factory.newRelationship(namespace, 'Attendee', 'user2@email.com');
+        await businessNetworkConnection.submitTransaction(buyTicket);
+        ticket = await ticketRegistry.get('12');
+        ticket.state.should.equal('BOUGHT');
+    });
+
+    it('User is not able to buy a ticket', async () => {
+
+        const ticketRegistry = await businessNetworkConnection.getAssetRegistry(ticketNS);
+        // Validate the ticket state.
+        let ticket = await ticketRegistry.get('11');
+
+        // submit the transaction
+        const buyTicket = factory.newTransaction(namespace, 'BuyTicket');
+        buyTicket.ticket = ticket;
+        buyTicket.buyer = factory.newRelationship(namespace, 'Attendee', 'user2@email.com');
+        await businessNetworkConnection.submitTransaction(buyTicket);
+        ticket = await ticketRegistry.get('11');
+        ticket.state.should.equal('NOT_AVAILABLE');
+    });
+
+    it('Validate ticket - Failure', async () => {
+        const ticketRegistry = await businessNetworkConnection.getAssetRegistry(ticketNS);
+        let ticket = await ticketRegistry.get('12');
+
+        const participantRegistry = await businessNetworkConnection.getParticipantRegistry(attendeeNS);
+        const validateTicket = factory.newTransaction(namespace, 'ValidateTicket');
+        validateTicket.ticket = ticket;
+        validateTicket.validator = factory.newRelationship(namespace, 'Attendee', 'user2@email.com');
+        await businessNetworkConnection.submitTransaction(validateTicket);
+
+        ticket = await ticketRegistry.get('12');
+        ticket.message.should.equal('This is an invalid ticket or it does not belong to you.');
+    });
+
+    it('Validate ticket - Success', async () => {
+        const ticketRegistry = await businessNetworkConnection.getAssetRegistry(ticketNS);
+        let ticket = await ticketRegistry.get('12');
+
+        const participantRegistry = await businessNetworkConnection.getParticipantRegistry(attendeeNS);
+        const validateTicket = factory.newTransaction(namespace, 'ValidateTicket');
+        validateTicket.ticket = ticket;
+        validateTicket.validator = factory.newRelationship(namespace, 'Attendee', 'user@email.com');
+        await businessNetworkConnection.submitTransaction(validateTicket);
+
+        ticket = await ticketRegistry.get('12');
+        ticket.message.should.equal('This is a valid ticket.');
+    });
+
+    it('Get history', async () => {
+        let historian = await businessNetworkConnection.getHistorian();
+        let historianRecords = await historian.getAll();
+        //console.log(historianRecords);
+
+    })
+
+});

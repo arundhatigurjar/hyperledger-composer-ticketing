@@ -14,30 +14,23 @@
 
 namespace org.deakin.ticketing.app
 
-/**
-* Location of the event
- */
-concept Venue{
-  o String loc
-  o String street
-  o String city
-  o String country
-  o String postcode
+// /**
+// * Location of the event
+//  */
+// concept Venue{
+//   o String loc
+//   o String street
+//   o String city
+//   o String country
+//   o String postcode
 
+// }
+enum TicketState{
+  o UP_FOR_SALE
+  o BOUGHT
+  o NOT_AVAILABLE
+  o NEW
 }
-/**
-* The event 
-* Note: The double 'E'. Cannot use Event as it coincides with a keyword
- */
-concept EEvent{
-  o String id
-  o Long numberOfTickets
-  o Venue venue
-  o DateTime time
-  --> EventManager eventManager
-}
-
-
 /**************************************************************************
                               PARTICIPANTS
  **************************************************************************/
@@ -58,41 +51,51 @@ participant Attendee extends User {}
                               ASSETS
  **************************************************************************/
  /**
+* The event 
+* Note: The double 'E'. Cannot use Event as it coincides with a keyword
+ */
+asset EEvent identified by id{
+  o String id
+  o Long numberOfTickets
+  o String venue
+  o DateTime time
+  --> Ticket[] tickets
+  --> EventManager eventManager
+}
+ /**
  * Ticket: This is the contract. 
  * - It is identfied by a token
  * - It has the price field
  * - It has a reference of the event that it belongs to
  * - It also has the reference of the buyer and the seller
  */
-asset Ticket identified by token {
+asset Ticket identified by id {
+  o String id
   o String token
+  o String message optional
   o Double price
-  o EEvent event
-  --> User seller
-  --> User buyer
+  --> EEvent event
+  o TicketState state 
+  --> User owner
 }
 
 /**************************************************************************
                               TRANSACTIONS
  **************************************************************************/
 
-transaction CreateEvent {
-  --> EventManager eventManager
+transaction CreateTickets {
+  o Double price
+  --> EEvent event
 }
-transaction GenerateTickets {
-  --> Ticket ticket
+transaction SellTicket{
+  o Ticket ticket
 }
-transaction DeleteEvent {
-   o EEvent event
-}
-
-transaction TicketSale{
+transaction BuyTicket{
+  o Ticket ticket
   --> User buyer
-  --> User seller
-  --> Ticket ticket
 }
 
 transaction ValidateTicket{
-  --> Ticket ticket
-  o String name
+  o Ticket ticket
+  --> User validator
 }
