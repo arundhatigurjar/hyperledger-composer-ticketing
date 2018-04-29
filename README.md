@@ -5,17 +5,17 @@ This is a very simple POC of a ticketing system using hyperledger-composer.
 ## Getting Started
 Follow these instructions to setup the roject on you local. All the instructions are for Mac OS X.
 
-###Pre-requisites
+### Pre-requisites
 Please ensure that you have the following installed before proceeding:
 
-####Basic
+#### Basic
 1. Node.js - v9.11.1, npm 5.6.0
 2. Node Version Manager(nvm) - Follow the steps given here: https://github.com/creationix/nvm
 3. Docker: Download and install Docker from here: https://docs.docker.com/docker-for-mac/install/
 4. Visual Studio Code : Download and install from here: https://code.visualstudio.com/download. Once you have installed it, install the hyperledger composer extension.
 5.  Git - you should have this installed
 
-####Hyperledger
+#### Hyperledger
 Download and install hyperledger client and related tools to develop and test the app.
 
 ```
