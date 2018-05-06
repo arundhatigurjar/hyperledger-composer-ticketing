@@ -36,7 +36,7 @@ enum TicketState{
  **************************************************************************/
 
  //Abstract type user, could be an Admin, EventManager or an Attendee
- abstract participant User identified by email{
+ abstract participant User identified by id{
   o String id
   o String name
   o String email
@@ -56,9 +56,10 @@ participant Attendee extends User {}
  */
 asset EEvent identified by id{
   o String id
-  o Long numberOfTickets
+  o Long numberOfTickets optional
   o String venue
   o DateTime time
+  o Double price
   --> Ticket[] tickets
   --> EventManager eventManager
 }
@@ -84,7 +85,7 @@ asset Ticket identified by id {
  **************************************************************************/
 
 transaction CreateTickets {
-  o Double price
+  o Double numberOfTickets
   --> EEvent event
 }
 transaction SellTicket{

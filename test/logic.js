@@ -138,18 +138,18 @@ describe('#' + namespace, () => {
         const eventManagerRegistry = await businessNetworkConnection.getParticipantRegistry(eventManagerNS);
         const eventManager = factory.newResource(namespace, participantEM, 'aru@email.com');
         eventManager.name = 'Event Manager';
-        eventManager.id = 'aru@email.com';
+        eventManager.email = 'aru@email.com';
 
         eventManagerRegistry.addAll([eventManager]);
 
         const attendeeRegistry = await businessNetworkConnection.getParticipantRegistry(attendeeNS);
         const attendee1 = factory.newResource(namespace, participantAttendee, 'user@email.com');
         attendee1.name = 'User';
-        attendee1.id = 'user@email.com';
+        attendee1.email = 'user@email.com';
 
         const attendee2 = factory.newResource(namespace, participantAttendee, 'user2@email.com');
         attendee2.name = 'User2';
-        attendee2.id = 'user2@email.com';
+        attendee2.email = 'user2@email.com';
 
         attendeeRegistry.addAll([attendee1, attendee2]);
 
@@ -158,6 +158,7 @@ describe('#' + namespace, () => {
         const assetEvent = factory.newResource(namespace, eventAssetType, 'EVENT_1');
         //assetEvent.owner = factory.newRelationship(namespace, participantEM, 'alice@email.com');
         assetEvent.numberOfTickets = 5;
+        assetEvent.price = 10;
         assetEvent.venue = 'Melbourne';
         assetEvent.time = new Date();
         assetEvent.eventManager = factory.newRelationship(namespace, 'EventManager', 'aru@email.com');;
@@ -221,7 +222,7 @@ describe('#' + namespace, () => {
         // submit the transaction
         const createTickets = factory.newTransaction(namespace, 'CreateTickets');
         createTickets.event = factory.newRelationship(namespace, 'EEvent', 'EVENT_1');
-        createTickets.price = 10;
+        createTickets.numberOfTickets = 10;
         await businessNetworkConnection.submitTransaction(createTickets);
 
         //Check if the correct number of tickets are generated
@@ -230,13 +231,13 @@ describe('#' + namespace, () => {
 
         // Validate the assets.
         const event = await eventRegistry.get(createTickets.event.$identifier);
-        tickets.should.have.lengthOf(event.numberOfTickets + 3);
+        tickets.should.have.lengthOf(createTickets.numberOfTickets + 3);
 
         for (var i = 0; i < event.numberOfTickets; i++) {
             var ticket = tickets[i];
             //ticket.owner.getFullyQualifiedIdentifier().should.equal(eventManagerNS + '#aru@email.com');
             ticket.event.getFullyQualifiedIdentifier().should.equal(eventNS + '#EVENT_1');
-            ticket.price.should.equal(createTickets.price);
+            //ticket.price.should.equal(createTickets.price);
             ticket.state.should.equal('NEW');
         }
     });
@@ -265,7 +266,7 @@ describe('#' + namespace, () => {
         const buyTicket = factory.newTransaction(namespace, 'BuyTicket');
         buyTicket.ticket = ticket;
         buyTicket.buyer = factory.newRelationship(namespace, 'Attendee', 'user2@email.com');
-        await businessNetworkConnection.submitTransaction(buyTicket);
+        let newTicket = await businessNetworkConnection.submitTransaction(buyTicket);
         ticket = await ticketRegistry.get('12');
         ticket.state.should.equal('BOUGHT');
     });
