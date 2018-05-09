@@ -60,7 +60,7 @@ asset EEvent identified by id{
   o String venue
   o DateTime time
   o Double price
-  --> Ticket[] tickets
+  --> Ticket[] tickets optional
   --> EventManager eventManager
 }
  /**
