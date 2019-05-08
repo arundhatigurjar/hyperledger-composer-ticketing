@@ -3,7 +3,7 @@
 This is a very simple POC of a ticketing system using hyperledger-composer.
 
 ## Getting Started
-Follow these instructions to setup the roject on you local. All the instructions are for Mac OS X.
+Follow these instructions to setup the project on your local. All the instructions are for Mac OS X.
 
 ### Pre-requisites
 Please ensure that you have the following installed before proceeding:
